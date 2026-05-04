@@ -1,6 +1,8 @@
 import 'package:get_it/get_it.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:template_app/core/services/datasource/api/app_api_client.dart';
+import 'package:template_app/core/services/datasource/api/auth_interceptor.dart';
 import 'package:template_app/core/services/datasource/api/dio_client.dart';
 import 'package:template_app/core/services/datasource/local_storage/local_storage.dart';
 import 'package:template_app/core/services/datasource/socket/socket_client.dart';
@@ -20,7 +22,7 @@ import 'package:template_app/router/app_router.dart';
 
 final locator = GetIt.instance;
 
-// ⚠️  PERINGATAN — JANGAN UBAH URUTAN REGISTRASI TANPA MEMBACA INI
+//* ⚠️  PERINGATAN — JANGAN UBAH URUTAN REGISTRASI TANPA MEMBACA INI
 //
 // Urutan di dalam initLocator() adalah KONTRAK EKSPLISIT, bukan gaya penulisan.
 // Setiap service hanya boleh dipanggil SETELAH semua dependensinya terdaftar.
@@ -42,21 +44,21 @@ final locator = GetIt.instance;
 //   - Circular dependency menyebabkan stack overflow saat resolusi lazy singleton.
 //   - Auth state terbaca sebelum secure storage di-init → user bypass login.
 Future<void> initLocator() async {
-  //// ======================
-  //// CRASHLYTICS
-  //// ======================
+  ////! ======================
+  ////! CRASHLYTICS
+  ////! ======================
   locator.registerSingleton(CrashlyticsService());
 
-  //// ======================
-  //// LOCAL STORAGE
-  //// ======================
+  ////! ======================
+  ////! LOCAL STORAGE
+  ////! ======================
   final prefs = await SharedPreferences.getInstance();
   locator.registerSingleton(LocalStorage(prefs));
   locator.registerLazySingleton(() => CacheManager(locator()));
 
-  //// ======================
-  //// AUTH
-  //// ======================
+  ////! ======================
+  ////! AUTH
+  ////! ======================
   final authSecureStorage = AuthSecureStorage(locator());
   await authSecureStorage.clearIfFreshInstall();
   locator.registerSingleton(authSecureStorage);
@@ -65,16 +67,42 @@ Future<void> initLocator() async {
   await authNotifier.init();
   locator.registerSingleton(authNotifier);
 
-  //// ======================
-  //// REMOTE DATASOURCE SERVICES
-  //// ======================
-  locator.registerLazySingleton(() => DioClient(Connectivity(), locator()));
+  ////! ======================
+  ////! REMOTE DATASOURCE SERVICES [API, SOCKET]
+  ////! ======================
+
+  // Shared — dipakai semua DioClient untuk cek koneksi sebelum request.
+  locator.registerLazySingleton(() => Connectivity());
+
+  // Untuk base URL berbeda, tambah instance baru dengan instanceName unik:
+  //   locator.registerLazySingleton(
+  //     () => DioClient('https://other.api.com', locator()),
+  //     instanceName: 'otherApi',
+  //   );
+  // Tanpa interceptors: auth token tidak akan dikirim ke main API.
+  locator.registerLazySingleton(
+    () => DioClient(
+      'https://api.main.com',
+      locator(),
+      interceptors: [AuthInterceptor(locator())],
+    ),
+    instanceName: 'mainApi',
+  );
+  locator.registerLazySingleton(
+    () => AppApiClient(locator(instanceName: 'mainApi')),
+  );
+
+  // SocketClient untuk koneksi realtime (chat, notifikasi live, dll).
   locator.registerLazySingleton(() => SocketClient());
+
+  ////! ======================
+  ////! APP ROUTER
+  ////! ======================
   locator.registerLazySingleton(() => AppRouter(locator()));
 
-  //// ======================
-  //// NOTIFICATION
-  //// ======================
+  ////! ======================
+  ////! NOTIFICATION
+  ////! ======================
   final dispatcher = NotificationDispatcher();
 
   // --- Register one handler per feature ---
@@ -92,20 +120,20 @@ Future<void> initLocator() async {
   locator.registerSingleton(notificationService);
   locator.registerSingleton(fcmService);
 
-  //// ======================
-  //// LOCATION
-  //// ======================
+  ////! ======================
+  ////! LOCATION
+  ////! ======================
   locator.registerLazySingleton(() => LocationService());
 
-  //// ======================
-  //// FILES
-  //// ======================
+  ////! ======================
+  ////! FILES
+  ////! ======================
   locator.registerLazySingleton(() => MediaPickerService());
   locator.registerLazySingleton(() => FilePickerService());
 
-  //// ======================
-  //// FIREBASE REMOTE CONFIG
-  //// ======================
+  ////! ======================
+  ////! FIREBASE REMOTE CONFIG
+  ////! ======================
   final remoteConfigService = RemoteConfigService();
   await remoteConfigService.initialize();
   locator.registerSingleton(remoteConfigService);

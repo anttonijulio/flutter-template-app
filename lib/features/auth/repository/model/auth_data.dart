@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:template_app/core/errors/exceptions/parsing_exception.dart';
 
 class AuthData extends Equatable {
   final String uid;
@@ -40,11 +41,15 @@ class AuthData extends Equatable {
   }
 
   factory AuthData.fromJson(Map<String, dynamic> map) {
-    return AuthData(
-      uid: map['uid'] as String,
-      email: map['email'] as String,
-      accessToken: map['access_token'] as String,
-      refreshToken: map['refresh_token'] as String,
-    );
+    try {
+      return AuthData(
+        uid: map['uid'] as String,
+        email: map['email'] as String,
+        accessToken: map['access_token'] as String,
+        refreshToken: map['refresh_token'] as String,
+      );
+    } catch (e, st) {
+      throw ParsingException(original: e, stackTrace: st);
+    }
   }
 }

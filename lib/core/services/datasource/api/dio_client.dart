@@ -6,10 +6,6 @@ import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:template_app/core/constants/status_error_code.dart';
 import 'package:template_app/core/errors/exceptions/api_exception.dart';
 import 'package:template_app/core/errors/exceptions/network_exception.dart';
-import 'package:template_app/features/auth/notifier/auth_notifier.dart';
-
-import 'auth_interceptor.dart';
-import 'response_dto.dart';
 
 typedef ReceivedProgressCallback = void Function(int received, int total);
 typedef SendProgressCallback = void Function(int count, int total);
@@ -18,21 +14,24 @@ class DioClient {
   final Dio _dio;
   final Connectivity _connectivity;
 
-  DioClient(this._connectivity, AuthNotifier authNotifier)
-    : _dio = Dio(
-        BaseOptions(
-          baseUrl: "https://baseurl.com",
-          connectTimeout: const Duration(seconds: 90),
-          receiveTimeout: const Duration(seconds: 90),
-          sendTimeout: const Duration(minutes: 10),
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        ),
-      ) {
+  DioClient(
+    String baseUrl,
+    this._connectivity, {
+    List<Interceptor> interceptors = const [],
+  }) : _dio = Dio(
+         BaseOptions(
+           baseUrl: baseUrl,
+           connectTimeout: const Duration(seconds: 90),
+           receiveTimeout: const Duration(seconds: 90),
+           sendTimeout: const Duration(minutes: 10),
+           headers: {
+             'Content-Type': 'application/json',
+             'Accept': 'application/json',
+           },
+         ),
+       ) {
     _dio.interceptors.addAll([
-      AuthInterceptor(authNotifier),
+      ...interceptors,
       PrettyDioLogger(
         requestHeader: true,
         requestBody: true,
@@ -59,7 +58,7 @@ class DioClient {
         .catchError((e, st) => false);
   }
 
-  Future<ResponseDto<T>> get<T>({
+  Future<Response<dynamic>> get({
     required String endpoint,
     Object? data,
     Options? options,
@@ -69,7 +68,7 @@ class DioClient {
   }) async {
     try {
       if (!await hasInternet()) throw NetworkException();
-      final res = await _dio.get(
+      return await _dio.get(
         endpoint,
         data: data,
         options: options,
@@ -77,13 +76,12 @@ class DioClient {
         queryParameters: queryParams,
         onReceiveProgress: onReceiveProgress,
       );
-      return ResponseDto.fromJson(res.data);
     } catch (e, st) {
       throw errorMapper(e, st);
     }
   }
 
-  Future<ResponseDto<T>> post<T>({
+  Future<Response<dynamic>> post({
     required String endpoint,
     Object? data,
     Map<String, dynamic>? queryParameters,
@@ -94,7 +92,7 @@ class DioClient {
   }) async {
     try {
       if (!await hasInternet()) throw NetworkException();
-      final res = await _dio.post(
+      return await _dio.post(
         endpoint,
         data: data,
         options: options,
@@ -103,13 +101,12 @@ class DioClient {
         queryParameters: queryParameters,
         onReceiveProgress: onReceiveProgress,
       );
-      return ResponseDto.fromJson(res.data);
     } catch (e, st) {
       throw errorMapper(e, st);
     }
   }
 
-  Future<ResponseDto<T>> put<T>({
+  Future<Response<dynamic>> put({
     required String endpoint,
     Object? data,
     Map<String, dynamic>? queryParameters,
@@ -120,7 +117,7 @@ class DioClient {
   }) async {
     try {
       if (!await hasInternet()) throw NetworkException();
-      final res = await _dio.put(
+      return await _dio.put(
         endpoint,
         data: data,
         options: options,
@@ -129,13 +126,12 @@ class DioClient {
         queryParameters: queryParameters,
         onReceiveProgress: onReceiveProgress,
       );
-      return ResponseDto.fromJson(res.data);
     } catch (e, st) {
       throw errorMapper(e, st);
     }
   }
 
-  Future<ResponseDto<T>> delete<T>({
+  Future<Response<dynamic>> delete({
     required String endpoint,
     Map<String, dynamic>? queryParameters,
     CancelToken? cancelToken,
@@ -144,14 +140,13 @@ class DioClient {
   }) async {
     try {
       if (!await hasInternet()) throw NetworkException();
-      final res = await _dio.delete(
+      return await _dio.delete(
         endpoint,
         cancelToken: cancelToken,
         data: data,
         options: options,
         queryParameters: queryParameters,
       );
-      return ResponseDto.fromJson(res.data);
     } catch (e, st) {
       throw errorMapper(e, st);
     }
