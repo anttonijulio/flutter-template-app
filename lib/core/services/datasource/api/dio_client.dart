@@ -1,0 +1,281 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:template_app/core/errors/app_error.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
+import 'package:template_app/core/constants/status_error_code.dart';
+import 'package:template_app/core/errors/exceptions/api_exception.dart';
+import 'package:template_app/core/errors/exceptions/network_exception.dart';
+import 'package:template_app/features/auth/notifier/auth_notifier.dart';
+
+import 'auth_interceptor.dart';
+import 'response_dto.dart';
+
+typedef ReceivedProgressCallback = void Function(int received, int total);
+typedef SendProgressCallback = void Function(int count, int total);
+
+class DioClient {
+  final Dio _dio;
+  final Connectivity _connectivity;
+
+  DioClient(this._connectivity, AuthNotifier authNotifier)
+    : _dio = Dio(
+        BaseOptions(
+          baseUrl: "https://baseurl.com",
+          connectTimeout: const Duration(seconds: 90),
+          receiveTimeout: const Duration(seconds: 90),
+          sendTimeout: const Duration(minutes: 10),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      ) {
+    _dio.interceptors.addAll([
+      AuthInterceptor(authNotifier),
+      PrettyDioLogger(
+        requestHeader: true,
+        requestBody: true,
+        responseBody: true,
+        responseHeader: false,
+        error: true,
+        compact: true,
+        maxWidth: 90,
+        enabled: kDebugMode || kProfileMode,
+      ),
+    ]);
+  }
+
+  Dio get dio => _dio;
+
+  Future<bool> hasInternet() {
+    return _connectivity
+        .checkConnectivity()
+        .then((conns) {
+          return conns.contains(ConnectivityResult.mobile) ||
+              conns.contains(ConnectivityResult.wifi) ||
+              conns.contains(ConnectivityResult.vpn);
+        })
+        .catchError((e, st) => false);
+  }
+
+  Future<ResponseDto<T>> get<T>({
+    required String endpoint,
+    Object? data,
+    Options? options,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? queryParams,
+    ReceivedProgressCallback? onReceiveProgress,
+  }) async {
+    try {
+      if (!await hasInternet()) throw NetworkException();
+      final res = await _dio.get(
+        endpoint,
+        data: data,
+        options: options,
+        cancelToken: cancelToken,
+        queryParameters: queryParams,
+        onReceiveProgress: onReceiveProgress,
+      );
+      return ResponseDto.fromJson(res.data);
+    } catch (e, st) {
+      throw errorMapper(e, st);
+    }
+  }
+
+  Future<ResponseDto<T>> post<T>({
+    required String endpoint,
+    Object? data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+    SendProgressCallback? onSendProgress,
+    ReceivedProgressCallback? onReceiveProgress,
+  }) async {
+    try {
+      if (!await hasInternet()) throw NetworkException();
+      final res = await _dio.post(
+        endpoint,
+        data: data,
+        options: options,
+        cancelToken: cancelToken,
+        onSendProgress: onSendProgress,
+        queryParameters: queryParameters,
+        onReceiveProgress: onReceiveProgress,
+      );
+      return ResponseDto.fromJson(res.data);
+    } catch (e, st) {
+      throw errorMapper(e, st);
+    }
+  }
+
+  Future<ResponseDto<T>> put<T>({
+    required String endpoint,
+    Object? data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+    SendProgressCallback? onSendProgress,
+    ReceivedProgressCallback? onReceiveProgress,
+  }) async {
+    try {
+      if (!await hasInternet()) throw NetworkException();
+      final res = await _dio.put(
+        endpoint,
+        data: data,
+        options: options,
+        cancelToken: cancelToken,
+        onSendProgress: onSendProgress,
+        queryParameters: queryParameters,
+        onReceiveProgress: onReceiveProgress,
+      );
+      return ResponseDto.fromJson(res.data);
+    } catch (e, st) {
+      throw errorMapper(e, st);
+    }
+  }
+
+  Future<ResponseDto<T>> delete<T>({
+    required String endpoint,
+    Map<String, dynamic>? queryParameters,
+    CancelToken? cancelToken,
+    Object? data,
+    Options? options,
+  }) async {
+    try {
+      if (!await hasInternet()) throw NetworkException();
+      final res = await _dio.delete(
+        endpoint,
+        cancelToken: cancelToken,
+        data: data,
+        options: options,
+        queryParameters: queryParameters,
+      );
+      return ResponseDto.fromJson(res.data);
+    } catch (e, st) {
+      throw errorMapper(e, st);
+    }
+  }
+
+  ApiException errorMapper(Object error, dynamic stackTrace) {
+    if (error is DioException) {
+      final type = error.type;
+      final statusCode = error.response?.statusCode;
+      return switch (type) {
+        .connectionTimeout => ApiException(
+          error: AppError(
+            title: "Koneksi Timeout",
+            message:
+                "Koneksi ke server memakan waktu terlalu lama. Periksa jaringan Anda dan coba lagi.",
+            code: API_CONNECTION_TIMEOUT_ERROR_CODE,
+          ),
+          exceptionType: type,
+          errorCode: API_CONNECTION_TIMEOUT_ERROR_CODE,
+          original: error,
+          stackTrace: stackTrace,
+          statusCode: statusCode,
+        ),
+        .sendTimeout => ApiException(
+          error: AppError(
+            title: "Gagal Mengirim Data",
+            message:
+                "Pengiriman data ke server memakan waktu terlalu lama. Periksa jaringan Anda dan coba lagi.",
+            code: API_SEND_TIMEOUT_ERROR_CODE,
+          ),
+          exceptionType: type,
+          errorCode: API_SEND_TIMEOUT_ERROR_CODE,
+          original: error,
+          stackTrace: stackTrace,
+          statusCode: statusCode,
+        ),
+        .receiveTimeout => ApiException(
+          error: AppError(
+            title: "Gagal Menerima Respons",
+            message:
+                "Server tidak merespons dalam waktu yang ditentukan. Coba lagi beberapa saat.",
+            code: API_RECEIVE_TIMEOUT_ERROR_CODE,
+          ),
+          exceptionType: type,
+          errorCode: API_RECEIVE_TIMEOUT_ERROR_CODE,
+          original: error,
+          stackTrace: stackTrace,
+          statusCode: statusCode,
+        ),
+        .badCertificate => ApiException(
+          error: AppError(
+            title: "Koneksi Tidak Aman",
+            message:
+                "Tidak dapat terhubung karena sertifikat keamanan server tidak valid. Hubungi tim dukungan jika masalah berlanjut.",
+            code: API_BAD_CERTIFICATE_ERROR_CODE,
+          ),
+          exceptionType: type,
+          errorCode: API_BAD_CERTIFICATE_ERROR_CODE,
+          original: error,
+          stackTrace: stackTrace,
+          statusCode: statusCode,
+        ),
+        .badResponse => ApiException(
+          error: AppError(
+            message: _extractMessageFromBody(error.response?.data),
+            code: API_BAD_RESPONSE_ERROR_CODE,
+          ),
+          exceptionType: type,
+          errorCode: API_BAD_RESPONSE_ERROR_CODE,
+          original: error,
+          stackTrace: stackTrace,
+          statusCode: statusCode,
+        ),
+        .cancel => ApiException(
+          error: AppError(
+            title: "Permintaan Dibatalkan",
+            message: "Permintaan telah dibatalkan. Silakan coba lagi.",
+            code: API_CANCEL_REQUEST_ERROR_CODE,
+          ),
+          exceptionType: type,
+          errorCode: API_CANCEL_REQUEST_ERROR_CODE,
+          original: error,
+          stackTrace: stackTrace,
+          statusCode: statusCode,
+        ),
+        .connectionError => ApiException(
+          error: AppError(
+            title: "Gagal Terhubung",
+            message:
+                "Tidak dapat terhubung ke server. Pastikan perangkat Anda terhubung ke internet.",
+            code: API_CONNECTION_ERROR_CODE,
+          ),
+          exceptionType: type,
+          errorCode: API_CONNECTION_ERROR_CODE,
+          original: error,
+          stackTrace: stackTrace,
+          statusCode: statusCode,
+        ),
+        .unknown => ApiException(
+          error: AppError(
+            title: "Terjadi Kesalahan",
+            message:
+                "Terjadi kesalahan yang tidak diketahui. Coba lagi atau hubungi tim dukungan jika masalah berlanjut.",
+            code: API_UNKNOWN_ERROR_CODE,
+          ),
+          exceptionType: type,
+          errorCode: API_UNKNOWN_ERROR_CODE,
+          original: error,
+          stackTrace: stackTrace,
+          statusCode: statusCode,
+        ),
+      };
+    }
+
+    return ApiException.unknown(error, stackTrace);
+  }
+
+  String _extractMessageFromBody(dynamic body) {
+    try {
+      if (body is Map && body['message'] != null) {
+        final message = body['message'].toString();
+        return message.isNotEmpty ? message : "-";
+      }
+    } catch (_) {}
+    return 'Terjadi kesalahan pada layanan. Silakan coba lagi dalam beberapa saat.';
+  }
+}
