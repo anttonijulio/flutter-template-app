@@ -74,8 +74,9 @@ flutter build apk --release
 
 Detailed guides for the core services are in the [`docs/`](docs/) folder:
 
-| Document                                     | Description                                                              |
-| -------------------------------------------- | ------------------------------------------------------------------------ |
-| [Notification Service](docs/notification.md) | Local notifications + FCM push, dispatcher pattern, adding new handlers  |
-| [Socket Client](docs/socket.md)              | Socket.IO transport, lifecycle with auth, per-feature repository pattern |
-| [Cache Manager](docs/cache.md)               | Two-layer memory/storage cache, TTL, SWR, force refresh, invalidation    |
+| Document                                     | Description                                                               |
+| -------------------------------------------- | ------------------------------------------------------------------------- |
+| [Notification Service](docs/notification.md) | Local notifications + FCM push, dispatcher pattern, adding new handlers   |
+| [Socket Client](docs/socket.md)              | Socket.IO transport, lifecycle with auth, per-feature repository pattern  |
+| [Cache Manager](docs/cache.md)               | Two-layer memory/storage cache, TTL, SWR, force refresh, invalidation     |
+| [Remote Config](docs/remote_config.md)       | Firebase Remote Config, adding parameters, force update, maintenance mode |

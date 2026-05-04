@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:template_app/core/services/firebase/firebase_messaging_service.dart';
-import 'package:template_app/core/services/injection/locator.dart';
+import 'package:template_app/injection/locator.dart';
 import 'package:template_app/core/services/notification/notification_dispatcher.dart';
 import 'package:template_app/core/services/notification/notification_service.dart';
 import 'package:template_app/router/app_router.dart';

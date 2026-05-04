@@ -7,9 +7,9 @@ import '../../utilities/logger.dart';
 import '../../utilities/result.dart';
 
 class MediaPickerService {
-  MediaPickerService(this._picker);
-
   final ImagePicker _picker;
+
+  MediaPickerService({ImagePicker? picker}) : _picker = picker ?? ImagePicker();
 
   static const String _logLabel = 'MediaPickerService';
 
