@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:template_app/core/services/datasource/api/dio_client.dart';
-import 'package:template_app/core/services/datasource/api/response_dto.dart';
+import 'package:template_app/core/services/datasources/api/dio_client.dart';
+import 'package:template_app/core/services/datasources/api/response_dto.dart';
 
 typedef ReceivedProgressCallback = void Function(int received, int total);
 typedef SendProgressCallback = void Function(int count, int total);

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:template_app/core/services/datasource/local_storage/local_storage.dart';
+import 'package:template_app/core/services/datasources/local_storage/local_storage.dart';
 import 'package:template_app/core/utilities/logger.dart';
 
 /// A generic cache entry that holds data alongside the moment it was created.

@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:template_app/core/services/datasource/local_storage/local_storage.dart';
-import 'package:template_app/core/services/datasource/local_storage/storage_key.dart';
+import 'package:template_app/core/services/datasources/local_storage/local_storage.dart';
+import 'package:template_app/core/services/datasources/local_storage/storage_key.dart';
 import 'package:template_app/features/auth/repository/model/auth_data.dart';
 
 class AuthSecureStorage {

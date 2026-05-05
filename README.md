@@ -81,3 +81,4 @@ Detailed guides for the core services are in the [`docs/`](docs/) folder:
 | [Cache Manager](docs/cache.md)               | Two-layer memory/storage cache, TTL, SWR, force refresh, invalidation     |
 | [Remote Config](docs/remote_config.md)       | Firebase Remote Config, adding parameters, force update, maintenance mode |
 | [DioClient & AppApiClient](docs/dio_client.md) | HTTP client setup, multi base URL, interceptors, konsumsi di datasource  |
+| [Result<S, E>](docs/result.md)                 | Sealed return type untuk operasi data: membuat, mengambil value, transformasi, dan pola per layer |

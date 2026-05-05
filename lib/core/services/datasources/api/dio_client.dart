@@ -24,10 +24,7 @@ class DioClient {
            connectTimeout: const Duration(seconds: 90),
            receiveTimeout: const Duration(seconds: 90),
            sendTimeout: const Duration(minutes: 10),
-           headers: {
-             'Content-Type': 'application/json',
-             'Accept': 'application/json',
-           },
+           headers: {'Accept': 'application/json'},
          ),
        ) {
     _dio.interceptors.addAll([
@@ -209,16 +206,11 @@ class DioClient {
           stackTrace: stackTrace,
           statusCode: statusCode,
         ),
-        .badResponse => ApiException(
-          error: AppError(
-            message: _extractMessageFromBody(error.response?.data),
-            code: API_BAD_RESPONSE_ERROR_CODE,
-          ),
-          exceptionType: type,
-          errorCode: API_BAD_RESPONSE_ERROR_CODE,
-          original: error,
+        .badResponse => _mapHttpStatusCode(
+          error: error,
           stackTrace: stackTrace,
           statusCode: statusCode,
+          type: type,
         ),
         .cancel => ApiException(
           error: AppError(
@@ -262,6 +254,138 @@ class DioClient {
     }
 
     return ApiException.unknown(error, stackTrace);
+  }
+
+  ApiException _mapHttpStatusCode({
+    required DioException error,
+    required dynamic stackTrace,
+    required int? statusCode,
+    required DioExceptionType type,
+  }) {
+    final serverMessage = _extractMessageFromBody(error.response?.data);
+    return switch (statusCode) {
+      400 => ApiException(
+        error: AppError(
+          message: serverMessage,
+          code: API_BAD_REQUEST_ERROR_CODE,
+        ),
+        exceptionType: type,
+        errorCode: API_BAD_REQUEST_ERROR_CODE,
+        original: error,
+        stackTrace: stackTrace,
+        statusCode: statusCode,
+      ),
+      401 => ApiException(
+        error: AppError(
+          title: 'Sesi Berakhir',
+          message: 'Sesi Anda telah berakhir. Silakan masuk kembali.',
+          code: API_UNAUTHORIZED_ERROR_CODE,
+        ),
+        exceptionType: type,
+        errorCode: API_UNAUTHORIZED_ERROR_CODE,
+        original: error,
+        stackTrace: stackTrace,
+        statusCode: statusCode,
+      ),
+      403 => ApiException(
+        error: AppError(
+          title: 'Akses Ditolak',
+          message: 'Anda tidak memiliki izin untuk melakukan tindakan ini.',
+          code: API_FORBIDDEN_ERROR_CODE,
+        ),
+        exceptionType: type,
+        errorCode: API_FORBIDDEN_ERROR_CODE,
+        original: error,
+        stackTrace: stackTrace,
+        statusCode: statusCode,
+      ),
+      404 => ApiException(
+        error: AppError(
+          title: 'Data Tidak Ditemukan',
+          message: serverMessage,
+          code: API_NOT_FOUND_ERROR_CODE,
+        ),
+        exceptionType: type,
+        errorCode: API_NOT_FOUND_ERROR_CODE,
+        original: error,
+        stackTrace: stackTrace,
+        statusCode: statusCode,
+      ),
+      409 => ApiException(
+        error: AppError(
+          title: 'Konflik Data',
+          message: serverMessage,
+          code: API_CONFLICT_ERROR_CODE,
+        ),
+        exceptionType: type,
+        errorCode: API_CONFLICT_ERROR_CODE,
+        original: error,
+        stackTrace: stackTrace,
+        statusCode: statusCode,
+      ),
+      422 => ApiException(
+        error: AppError(
+          title: 'Validasi Gagal',
+          message: serverMessage,
+          code: API_UNPROCESSABLE_ERROR_CODE,
+        ),
+        exceptionType: type,
+        errorCode: API_UNPROCESSABLE_ERROR_CODE,
+        original: error,
+        stackTrace: stackTrace,
+        statusCode: statusCode,
+      ),
+      429 => ApiException(
+        error: AppError(
+          title: 'Terlalu Banyak Permintaan',
+          message:
+              'Anda telah mencapai batas permintaan. Tunggu sebentar lalu coba lagi.',
+          code: API_TOO_MANY_REQUESTS_ERROR_CODE,
+        ),
+        exceptionType: type,
+        errorCode: API_TOO_MANY_REQUESTS_ERROR_CODE,
+        original: error,
+        stackTrace: stackTrace,
+        statusCode: statusCode,
+      ),
+      503 => ApiException(
+        error: AppError(
+          title: 'Layanan Tidak Tersedia',
+          message:
+              'Server sedang dalam pemeliharaan. Silakan coba lagi beberapa saat.',
+          code: API_SERVICE_UNAVAILABLE_ERROR_CODE,
+        ),
+        exceptionType: type,
+        errorCode: API_SERVICE_UNAVAILABLE_ERROR_CODE,
+        original: error,
+        stackTrace: stackTrace,
+        statusCode: statusCode,
+      ),
+      int s when s >= 500 => ApiException(
+        error: AppError(
+          title: 'Kesalahan Server',
+          message:
+              'Terjadi kesalahan di server kami. Tim teknis sudah diberitahu.',
+          code: API_SERVER_ERROR_CODE,
+        ),
+        exceptionType: type,
+        errorCode: API_SERVER_ERROR_CODE,
+        original: error,
+        stackTrace: stackTrace,
+        statusCode: statusCode,
+      ),
+      _ => ApiException(
+        error: AppError(
+          message: serverMessage,
+          code: API_BAD_RESPONSE_ERROR_CODE,
+        ),
+        exceptionType: type,
+        errorCode: API_BAD_RESPONSE_ERROR_CODE,
+        original: error,
+        stackTrace: stackTrace,
+        statusCode: statusCode,
+      ),
+    };
   }
 
   String _extractMessageFromBody(dynamic body) {

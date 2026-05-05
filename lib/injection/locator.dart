@@ -1,11 +1,11 @@
 import 'package:get_it/get_it.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:template_app/core/services/datasource/api/app_api_client.dart';
-import 'package:template_app/core/services/datasource/api/auth_interceptor.dart';
-import 'package:template_app/core/services/datasource/api/dio_client.dart';
-import 'package:template_app/core/services/datasource/local_storage/local_storage.dart';
-import 'package:template_app/core/services/datasource/socket/socket_client.dart';
+import 'package:template_app/core/services/datasources/api/app_api_client.dart';
+import 'package:template_app/core/services/datasources/api/auth_interceptor.dart';
+import 'package:template_app/core/services/datasources/api/dio_client.dart';
+import 'package:template_app/core/services/datasources/local_storage/local_storage.dart';
+import 'package:template_app/core/services/datasources/socket/socket_client.dart';
 import 'package:template_app/core/services/caching/cache_manager.dart';
 import 'package:template_app/core/services/firebase/crashlytics_service.dart';
 import 'package:template_app/core/services/firebase/firebase_messaging_service.dart';
@@ -15,6 +15,7 @@ import 'package:template_app/core/services/files/media_picker_service.dart';
 import 'package:template_app/core/services/location/location_service.dart';
 import 'package:template_app/core/services/notification/notification_dispatcher.dart';
 import 'package:template_app/core/services/notification/notification_service.dart';
+import 'package:template_app/core/services/region/region_service.dart';
 import 'package:template_app/features/auth/datasource/auth_secure_storage.dart';
 import 'package:template_app/features/auth/notifier/auth_notifier.dart';
 import 'package:template_app/features/chat/notification/chat_notification_handler.dart';
@@ -80,6 +81,8 @@ Future<void> initLocator() async {
   //     instanceName: 'otherApi',
   //   );
   // Tanpa interceptors: auth token tidak akan dikirim ke main API.
+
+  // -------- MAIN API ----------------
   locator.registerLazySingleton(
     () => DioClient(
       'https://api.main.com',
@@ -90,6 +93,12 @@ Future<void> initLocator() async {
   );
   locator.registerLazySingleton(
     () => AppApiClient(locator(instanceName: 'mainApi')),
+  );
+
+  // -------- WILAYAH API ----------------
+  locator.registerLazySingleton(
+    () => DioClient('https://wilayah.id/api', locator()),
+    instanceName: 'wilayahApi',
   );
 
   // SocketClient untuk koneksi realtime (chat, notifikasi live, dll).
@@ -137,4 +146,11 @@ Future<void> initLocator() async {
   final remoteConfigService = RemoteConfigService();
   await remoteConfigService.initialize();
   locator.registerSingleton(remoteConfigService);
+
+  ////! ======================
+  ////! REGION SERVICE
+  ////! ======================
+  locator.registerLazySingleton(
+    () => RegionService(locator(instanceName: 'wilayahApi'), locator()),
+  );
 }

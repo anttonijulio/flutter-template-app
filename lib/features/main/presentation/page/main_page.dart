@@ -10,7 +10,7 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _viewIndex = 0;
 
-  void _updateView(int newIndex) {
+  void _updateView(int newIndex) async {
     if (!mounted) return;
     _viewIndex = newIndex;
     setState(() {});
