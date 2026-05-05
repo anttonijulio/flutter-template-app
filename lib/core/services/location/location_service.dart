@@ -1,8 +1,10 @@
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:template_app/core/errors/app_error.dart';
 import 'package:template_app/core/constants/status_error_code.dart';
 import 'package:template_app/core/services/caching/cache_manager.dart';
 import 'package:template_app/core/services/location/location_service_helper.dart';
+import 'package:template_app/core/services/location/model/location_data.dart';
 import 'package:template_app/core/utilities/logger.dart';
 import 'package:template_app/core/utilities/result.dart';
 
@@ -13,9 +15,9 @@ class LocationService {
   final LocationServiceHelper _serviceHelper;
 
   static const String _logLabel = 'LocationService';
-  static const String _cacheKey = 'location:current_position';
+  static const String _cacheKey = 'location:current_location_data';
 
-  Future<AppResult<Position>> getCurrentPosition({
+  Future<AppResult<LocationData>> getCurrentPosition({
     LocationAccuracy accuracy = LocationAccuracy.high,
     bool enableCache = true,
     Duration cacheAge = const Duration(days: 1),
@@ -26,22 +28,21 @@ class LocationService {
       final guardResult = await _guard();
       if (guardResult != null) return Result.failure(guardResult);
 
-      final position = await _cache.get<Position>(
+      final data = await _cache.get<LocationData>(
         key: _cacheKey,
-        fetcher: () => Geolocator.getCurrentPosition(
-          locationSettings: LocationSettings(accuracy: accuracy),
-        ),
+        fetcher: () => _fetchLocationData(accuracy),
         maxAge: cacheAge,
         forceRefresh: !enableCache,
-        fromJson: (json) => Position.fromMap(json as Map<String, dynamic>),
-        toJson: (p) => p.toJson(),
+        fromJson: (json) => LocationData.fromJson(json as Map<String, dynamic>),
+        toJson: (d) => d.toJson(),
       );
 
       Log.i(
-        'Position acquired: ${position.latitude}, ${position.longitude}',
+        'Position acquired: ${data.position.latitude}, ${data.position.longitude}'
+        '${data.placemark != null ? " — ${data.placemark!.locality}" : ""}',
         label: _logLabel,
       );
-      return Result.success(position);
+      return Result.success(data);
     } catch (e, s) {
       Log.e(
         'Failed to get position',
@@ -63,6 +64,21 @@ class LocationService {
         accuracy: accuracy,
         distanceFilter: distanceFilter,
       ),
+    );
+  }
+
+  /// Menghitung jarak antara dua koordinat dalam meter.
+  double distanceBetween({
+    required double startLatitude,
+    required double startLongitude,
+    required double endLatitude,
+    required double endLongitude,
+  }) {
+    return Geolocator.distanceBetween(
+      startLatitude,
+      startLongitude,
+      endLatitude,
+      endLongitude,
     );
   }
 
@@ -128,6 +144,27 @@ class LocationService {
   Future<bool> openLocationSettings() {
     Log.d('Opening location settings', label: _logLabel);
     return Geolocator.openLocationSettings();
+  }
+
+  Future<LocationData> _fetchLocationData(LocationAccuracy accuracy) async {
+    final position = await Geolocator.getCurrentPosition(
+      locationSettings: LocationSettings(accuracy: accuracy),
+    );
+
+    Placemark? placemark;
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+      placemark = placemarks.isNotEmpty ? placemarks.first : null;
+      Log.d('Placemark resolved: ${placemark?.locality}', label: _logLabel);
+    } catch (e) {
+      // Geocoding gagal tidak membatalkan operasi — placemark tetap null.
+      Log.w('Geocoding failed, returning position only: $e', label: _logLabel);
+    }
+
+    return LocationData(position: position, placemark: placemark);
   }
 
   /// Hanya mengecek status GPS dan izin, tanpa side effect apapun.
