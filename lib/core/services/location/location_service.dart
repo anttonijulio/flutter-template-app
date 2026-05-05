@@ -1,14 +1,22 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:template_app/core/errors/app_error.dart';
 import 'package:template_app/core/constants/status_error_code.dart';
+import 'package:template_app/core/services/caching/cache_manager.dart';
 import 'package:template_app/core/utilities/logger.dart';
 import 'package:template_app/core/utilities/result.dart';
 
 class LocationService {
+  LocationService(this._cache);
+
+  final CacheManager _cache;
+
   static const String _logLabel = 'LocationService';
+  static const String _cacheKey = 'location:current_position';
 
   Future<AppResult<Position>> getCurrentPosition({
     LocationAccuracy accuracy = LocationAccuracy.high,
+    bool enableCache = true,
+    Duration cacheAge = const Duration(days: 1),
   }) async {
     try {
       Log.d('Getting current position', label: _logLabel);
@@ -16,9 +24,17 @@ class LocationService {
       final guardResult = await _guard();
       if (guardResult != null) return Result.failure(guardResult);
 
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: LocationSettings(accuracy: accuracy),
+      final position = await _cache.get<Position>(
+        key: _cacheKey,
+        fetcher: () => Geolocator.getCurrentPosition(
+          locationSettings: LocationSettings(accuracy: accuracy),
+        ),
+        maxAge: cacheAge,
+        forceRefresh: !enableCache,
+        fromJson: (json) => Position.fromMap(json as Map<String, dynamic>),
+        toJson: (p) => p.toJson(),
       );
+
       Log.i(
         'Position acquired: ${position.latitude}, ${position.longitude}',
         label: _logLabel,

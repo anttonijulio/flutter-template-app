@@ -132,7 +132,7 @@ Future<void> initLocator() async {
   ////! ======================
   ////! LOCATION
   ////! ======================
-  locator.registerLazySingleton(() => LocationService());
+  locator.registerLazySingleton(() => LocationService(locator()));
 
   ////! ======================
   ////! FILES
