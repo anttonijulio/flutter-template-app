@@ -4,6 +4,10 @@
 
 Helper ini tidak menggantikan `geolocator` — ia hanya menangani satu hal: meminta user menyalakan GPS via dialog native sebelum operasi lokasi dilanjutkan. Integrasi ke `LocationService._guard()` sudah dilakukan sehingga caller tidak perlu memanggil helper ini secara langsung.
 
+**Tampilan dialog di Android:**
+
+<img src="overviews/android-gms-location-service-dialog.jpeg" alt="Android GMS Location Service Dialog" height="370">
+
 ---
 
 ## Struktur file
@@ -54,6 +58,7 @@ Tidak ada dependency tambahan di `pubspec.yaml`. `geolocator` sudah menarik `com
 Channel name saat ini adalah `template_app/location_service`. Ganti `template_app` sesuai nama package project:
 
 **Dart** — [lib/core/services/location/location_service_helper.dart](../lib/core/services/location/location_service_helper.dart):
+
 ```dart
 static const MethodChannel _channel = MethodChannel(
   'nama_project_baru/location_service', // ← ganti ini
@@ -61,11 +66,13 @@ static const MethodChannel _channel = MethodChannel(
 ```
 
 **Kotlin** — `MainActivity.kt`:
+
 ```kotlin
 const val CHANNEL = "nama_project_baru/location_service" // ← ganti ini
 ```
 
 **Swift** — `AppDelegate.swift`:
+
 ```swift
 let channel = FlutterMethodChannel(
   name: "nama_project_baru/location_service", // ← ganti ini
@@ -80,6 +87,7 @@ Ketiga string **harus identik**. Satu berbeda = channel tidak terhubung dan `Mis
 Salin seluruh isi `MainActivity.kt`. Jika project sudah punya `MainActivity.kt` yang tidak kosong, lihat bagian [Konflik dengan plugin lain](#konflik-dengan-plugin-lain) di bawah.
 
 Pastikan package declaration di baris pertama sesuai package name project:
+
 ```kotlin
 package com.nama_company.nama_project // ← sesuaikan
 ```
@@ -183,14 +191,14 @@ if (enabled) {
 
 ## Batasan
 
-| Batasan | Keterangan |
-|---|---|
-| **Android saja yang punya dialog native** | iOS tidak memiliki API setara. Di iOS helper hanya mengecek status GPS tanpa interaksi user. |
-| **Bergantung pada Google Play Services** | Dialog tidak muncul di device tanpa Play Services (beberapa ROM custom, emulator tertentu, atau device non-Google). Helper return `false` dengan tenang. |
-| **Satu permintaan dalam satu waktu** | Tidak bisa memanggil `requestService()` paralel — Android menolak dengan `ALREADY_PENDING`. |
-| **Tidak bisa override teks dialog** | Teks dan tombol dialog sepenuhnya dikontrol oleh Play Services — tidak bisa dikustomisasi. |
+| Batasan                                      | Keterangan                                                                                                                                                                                                                                                                                 |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Android saja yang punya dialog native**    | iOS tidak memiliki API setara. Di iOS helper hanya mengecek status GPS tanpa interaksi user.                                                                                                                                                                                               |
+| **Bergantung pada Google Play Services**     | Dialog tidak muncul di device tanpa Play Services (beberapa ROM custom, emulator tertentu, atau device non-Google). Helper return `false` dengan tenang.                                                                                                                                   |
+| **Satu permintaan dalam satu waktu**         | Tidak bisa memanggil `requestService()` paralel — Android menolak dengan `ALREADY_PENDING`.                                                                                                                                                                                                |
+| **Tidak bisa override teks dialog**          | Teks dan tombol dialog sepenuhnya dikontrol oleh Play Services — tidak bisa dikustomisasi.                                                                                                                                                                                                 |
 | **`onActivityResult` deprecated di API 29+** | Google menandai `onActivityResult` deprecated dan merekomendasikan `ActivityResultLauncher`. Namun Flutter Engine masih merutekan hasil ke `onActivityResult` — selama Engine belum bermigrasi, implementasi ini tetap benar. Pantau changelog Flutter Engine jika muncul breaking change. |
-| **iOS: tidak ada dialog** | Satu-satunya cara meminta user menyalakan GPS di iOS adalah dengan deep link ke Settings: `UIApplication.openSettingsURLString`. Ini di luar scope helper ini. |
+| **iOS: tidak ada dialog**                    | Satu-satunya cara meminta user menyalakan GPS di iOS adalah dengan deep link ke Settings: `UIApplication.openSettingsURLString`. Ini di luar scope helper ini.                                                                                                                             |
 
 ---
 
@@ -248,6 +256,7 @@ class MainActivity : FlutterFragmentActivity() { // ← ganti parent class
 Jika `AppDelegate.swift` sudah memiliki logika dari plugin lain (seperti `flutter_local_notifications` yang sudah ada di template ini), cukup **tambahkan** blok channel setelah `GeneratedPluginRegistrant.register(with: self)`. Jangan timpa `AppDelegate` — selalu append, bukan replace.
 
 Urutan yang aman:
+
 ```swift
 GeneratedPluginRegistrant.register(with: self) // ← harus sebelum channel setup
 
