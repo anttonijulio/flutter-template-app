@@ -51,7 +51,15 @@ Dart: LocationService._guard()
 lib/core/services/location/location_service_helper.dart
 ```
 
-Tidak ada dependency tambahan di `pubspec.yaml`. `geolocator` sudah menarik `com.google.android.gms:play-services-location` secara transitif.
+Tidak ada dependency tambahan di `pubspec.yaml`. Namun di sisi Android, `play-services-location` perlu didaftarkan **secara eksplisit** di `android/app/build.gradle.kts` — meskipun `geolocator` menariknya secara transitif, dependency tersebut tidak diekspos ke modul `:app`. Tanpa baris ini, build Kotlin akan gagal dengan `Unresolved reference 'LocationServices'`:
+
+```kotlin
+// android/app/build.gradle.kts
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+}
+```
 
 ### 2. Ganti nama channel (wajib)
 
