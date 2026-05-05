@@ -251,6 +251,14 @@ class DioClient {
           statusCode: statusCode,
         ),
       };
+    } else if (error is NetworkException) {
+      return ApiException(
+        error: error.error,
+        errorCode: error.errorCode,
+        original: error,
+        stackTrace: stackTrace,
+        statusCode: error.statusCode,
+      );
     }
 
     return ApiException.unknown(error, stackTrace);
