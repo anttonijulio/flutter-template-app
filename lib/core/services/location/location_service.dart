@@ -74,22 +74,68 @@ class LocationService {
         permission == LocationPermission.always;
   }
 
-  Future<AppResult<bool>> requestPermission() async {
-    Log.d('Requesting location permission', label: _logLabel);
-    final error = await _guard();
-    if (error != null) return Result.failure(error);
-    Log.i('Location permission granted', label: _logLabel);
-    return Result.success(true);
+  /// Menampilkan dialog native GPS enable (Android: Play Services dialog,
+  /// iOS: cek status tanpa dialog). Return true jika GPS aktif setelah dialog.
+  Future<bool> requestService() {
+    Log.d('Requesting location service via native dialog', label: _logLabel);
+    return _serviceHelper.requestService();
   }
 
-  Future<AppError?> _guard() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      Log.w('Location service is disabled, requesting via dialog', label: _logLabel);
-      serviceEnabled = await _serviceHelper.requestService();
+  /// Meminta izin lokasi dari user. Return failure jika ditolak atau
+  /// ditolak permanen.
+  Future<AppResult<bool>> requestPermission() async {
+    Log.d('Requesting location permission', label: _logLabel);
+    final permission = await Geolocator.requestPermission();
+    Log.d('Permission result: $permission', label: _logLabel);
+
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      Log.i('Location permission granted', label: _logLabel);
+      return Result.success(true);
     }
+
+    if (permission == LocationPermission.deniedForever) {
+      Log.w('Location permission permanently denied', label: _logLabel);
+      return Result.failure(
+        const AppError(
+          title: 'Izin Lokasi Ditolak',
+          message:
+              'Izin lokasi ditolak secara permanen. Buka pengaturan aplikasi untuk mengizinkan akses lokasi.',
+          code: LOCATION_PERMISSION_DENIED_FOREVER_ERROR_CODE,
+        ),
+      );
+    }
+
+    Log.w('Location permission denied', label: _logLabel);
+    return Result.failure(
+      const AppError(
+        title: 'Izin Lokasi Diperlukan',
+        message: 'Izin akses lokasi diperlukan untuk menggunakan fitur ini.',
+        code: LOCATION_PERMISSION_DENIED_ERROR_CODE,
+      ),
+    );
+  }
+
+  /// Membuka halaman pengaturan aplikasi di sistem.
+  /// Gunakan saat permission berstatus deniedForever.
+  Future<bool> openAppSettings() {
+    Log.d('Opening app settings', label: _logLabel);
+    return Geolocator.openAppSettings();
+  }
+
+  /// Membuka halaman pengaturan lokasi di sistem.
+  /// Gunakan sebagai fallback jika dialog native GPS tidak tersedia.
+  Future<bool> openLocationSettings() {
+    Log.d('Opening location settings', label: _logLabel);
+    return Geolocator.openLocationSettings();
+  }
+
+  /// Hanya mengecek status GPS dan izin, tanpa side effect apapun.
+  /// Return AppError jika salah satu kondisi belum terpenuhi.
+  Future<AppError?> _guard() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      Log.w('Location service still disabled after prompt', label: _logLabel);
+      Log.w('Location service is disabled', label: _logLabel);
       return const AppError(
         title: 'GPS Tidak Aktif',
         message:
@@ -98,13 +144,8 @@ class LocationService {
       );
     }
 
-    LocationPermission permission = await Geolocator.checkPermission();
+    final permission = await Geolocator.checkPermission();
     Log.d('Permission status: $permission', label: _logLabel);
-
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      Log.d('Permission after request: $permission', label: _logLabel);
-    }
 
     if (permission == LocationPermission.deniedForever) {
       Log.w('Location permission permanently denied', label: _logLabel);
