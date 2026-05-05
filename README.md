@@ -82,3 +82,4 @@ Detailed guides for the core services are in the [`docs/`](docs/) folder:
 | [Remote Config](docs/remote_config.md)       | Firebase Remote Config, adding parameters, force update, maintenance mode |
 | [DioClient & AppApiClient](docs/dio_client.md) | HTTP client setup, multi base URL, interceptors, konsumsi di datasource  |
 | [Result<S, E>](docs/result.md)                 | Sealed return type untuk operasi data: membuat, mengambil value, transformasi, dan pola per layer |
+| [LocationServiceHelper](docs/location_service_helper.md) | Dialog GPS native via Play Services (Android) tanpa redirect ke Settings; setup, konflik native, batasan |

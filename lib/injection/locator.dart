@@ -13,6 +13,7 @@ import 'package:template_app/core/services/firebase/remote_config_service.dart';
 import 'package:template_app/core/services/files/file_picker_service.dart';
 import 'package:template_app/core/services/files/media_picker_service.dart';
 import 'package:template_app/core/services/location/location_service.dart';
+import 'package:template_app/core/services/location/location_service_helper.dart';
 import 'package:template_app/core/services/notification/notification_dispatcher.dart';
 import 'package:template_app/core/services/notification/notification_service.dart';
 import 'package:template_app/core/services/region/region_service.dart';
@@ -132,7 +133,8 @@ Future<void> initLocator() async {
   ////! ======================
   ////! LOCATION
   ////! ======================
-  locator.registerLazySingleton(() => LocationService(locator()));
+  locator.registerLazySingleton(() => LocationServiceHelper());
+  locator.registerLazySingleton(() => LocationService(locator(), locator()));
 
   ////! ======================
   ////! FILES

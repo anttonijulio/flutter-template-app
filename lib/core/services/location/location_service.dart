@@ -2,13 +2,15 @@ import 'package:geolocator/geolocator.dart';
 import 'package:template_app/core/errors/app_error.dart';
 import 'package:template_app/core/constants/status_error_code.dart';
 import 'package:template_app/core/services/caching/cache_manager.dart';
+import 'package:template_app/core/services/location/location_service_helper.dart';
 import 'package:template_app/core/utilities/logger.dart';
 import 'package:template_app/core/utilities/result.dart';
 
 class LocationService {
-  LocationService(this._cache);
+  LocationService(this._cache, this._serviceHelper);
 
   final CacheManager _cache;
+  final LocationServiceHelper _serviceHelper;
 
   static const String _logLabel = 'LocationService';
   static const String _cacheKey = 'location:current_position';
@@ -81,9 +83,13 @@ class LocationService {
   }
 
   Future<AppError?> _guard() async {
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      Log.w('Location service is disabled', label: _logLabel);
+      Log.w('Location service is disabled, requesting via dialog', label: _logLabel);
+      serviceEnabled = await _serviceHelper.requestService();
+    }
+    if (!serviceEnabled) {
+      Log.w('Location service still disabled after prompt', label: _logLabel);
       return const AppError(
         title: 'GPS Tidak Aktif',
         message:
