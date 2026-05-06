@@ -1,37 +1,45 @@
 # Template App
 
-A Flutter starter template with clean architecture, authentication scaffolding, and reusable core infrastructure. Targets Android, iOS, Web, Windows, macOS, and Linux.
+> **Disclaimer**
+>
+> Repository ini adalah **template pribadi penulis**. Setiap service layer yang ada di sini merupakan cerminan dari study case nyata yang pernah penulis alami selama mengerjakan proyek — bukan arsitektur umum, bukan best practice universal, dan bukan rujukan resmi.
+>
+> Penulis **tidak merekomendasikan** template ini untuk dipakai orang lain. Jika Anda menemukannya dan tergerak menggunakannya, lakukan dengan kesadaran penuh bahwa keputusan desain di sini sangat opinionated dan terikat pada konteks penulis. Tidak ada jaminan dukungan, kompatibilitas, atau dokumentasi yang ramah untuk pengguna luar.
+
+---
+
+Flutter starter template dengan clean architecture, scaffolding autentikasi, dan core infrastructure yang reusable. Mendukung Android, iOS.
 
 ---
 
 ## Tech Stack
 
-| Package                           | Purpose                        |
+| Package                           | Kegunaan                       |
 | --------------------------------- | ------------------------------ |
-| `flutter_bloc` / `hydrated_bloc`  | State management + persistence |
+| `flutter_bloc` / `hydrated_bloc`  | State management + persistensi |
 | `go_router` + `go_router_builder` | Declarative routing + codegen  |
 | `get_it`                          | Dependency injection           |
-| `dio` + `pretty_dio_logger`       | HTTP client + request logging  |
-| `connectivity_plus`               | Network connectivity detection |
-| `shared_preferences`              | Local key-value storage        |
+| `dio` + `pretty_dio_logger`       | HTTP client + logging request  |
+| `connectivity_plus`               | Deteksi konektivitas jaringan  |
+| `shared_preferences`              | Penyimpanan key-value lokal    |
 | `socket_io_client`                | WebSocket / Socket.IO          |
-| `permission_handler`              | Runtime permissions            |
-| `cached_network_image`            | Image caching                  |
-| `shimmer`                         | Loading skeleton UI            |
+| `permission_handler`              | Runtime permission             |
+| `cached_network_image`            | Caching gambar                 |
+| `shimmer`                         | Skeleton UI saat loading       |
 
 ---
 
-## Architecture
+## Arsitektur
 
 ```
 lib/
 ├── main.dart
 ├── core/
-│   ├── constants/       # Auto-generated asset paths
+│   ├── constants/       # Path asset auto-generated
 │   ├── datasource/      # DioClient, LocalStorage, SocketClient
-│   ├── debug/           # Logger (no-op in release)
+│   ├── debug/           # Logger (no-op di release)
 │   ├── enums/           # RequestState
-│   ├── errors/          # AppError, AppException, and subtypes
+│   ├── errors/          # AppError, AppException, dan turunannya
 │   ├── extensions/      # DateTime, BuildContext
 │   ├── injection/       # GetIt locator
 │   ├── services/        # NotificationService, FirebaseMessagingService, CacheManager
@@ -39,29 +47,29 @@ lib/
 ├── modules/
 │   ├── app.dart
 │   ├── auth/            # AuthNotifier (ChangeNotifier)
-│   └── main/            # Bottom-tab shell
-├── router/              # GoRouter config + generated routes
-└── widget/              # Shared UI components
+│   └── main/            # Shell bottom-tab
+├── router/              # Konfigurasi GoRouter + generated routes
+└── widget/              # Komponen UI bersama
 ```
 
 **Data flow:** `Repository → UseCase → Cubit/Bloc → UI`
 
-**State management:** BLoC/Cubit for features; `AuthNotifier` (ChangeNotifier) for auth + router refresh.
+**State management:** BLoC/Cubit untuk fitur; `AuthNotifier` (ChangeNotifier) untuk auth + router refresh.
 
-**Error handling:** All data operations return `Result<S, AppError>` — never throw across layer boundaries.
+**Error handling:** Semua operasi data mengembalikan `Result<S, AppError>` — tidak pernah melempar exception lintas layer.
 
 ---
 
-## Getting Started
+## Memulai
 
 ```bash
-# Run
+# Jalankan
 flutter run
 
 # Generate code (routes, assets)
 dart run build_runner build --delete-conflicting-outputs
 
-# Run tests
+# Jalankan test
 flutter test
 
 # Build APK
@@ -70,17 +78,17 @@ flutter build apk --release
 
 ---
 
-## Service Documentation
+## Dokumentasi Service
 
-Detailed guides for the core services are in the [`docs/`](docs/) folder:
+Panduan detail untuk setiap core service ada di folder [`docs/`](docs/):
 
-| Document                                                 | Description                                                                                                         |
+| Dokumen                                                  | Deskripsi                                                                                                           |
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| [Notification Service](docs/notification.md)             | Local notifications + FCM push, dispatcher pattern, adding new handlers                                             |
-| [Socket Client](docs/socket.md)                          | Socket.IO transport, lifecycle with auth, per-feature repository pattern                                            |
-| [Cache Manager](docs/cache.md)                           | Two-layer memory/storage cache, TTL, SWR, force refresh, invalidation                                               |
-| [Remote Config](docs/remote_config.md)                   | Firebase Remote Config, adding parameters, force update, maintenance mode                                           |
-| [DioClient & AppApiClient](docs/dio_client.md)           | HTTP client setup, multi base URL, interceptors, konsumsi di datasource                                             |
+| [Notification Service](docs/notification.md)             | Local notification + FCM push, pola dispatcher, cara menambah handler baru                                          |
+| [Socket Client](docs/socket.md)                          | Transport Socket.IO, lifecycle dengan auth, pola repository per fitur                                               |
+| [Cache Manager](docs/cache.md)                           | Cache dua-lapis memory/storage, TTL, SWR, force refresh, invalidasi                                                 |
+| [Remote Config](docs/remote_config.md)                   | Firebase Remote Config, menambah parameter, force update, maintenance mode                                          |
+| [DioClient & AppApiClient](docs/dio_client.md)           | Setup HTTP client, multi base URL, interceptors, konsumsi di datasource                                             |
 | [Result<S, E>](docs/result.md)                           | Sealed return type untuk operasi data: membuat, mengambil value, transformasi, dan pola per layer                   |
 | [LocationServiceHelper](docs/location_service_helper.md) | Dialog GPS native via Play Services (Android) tanpa redirect ke Settings; setup, konflik native, batasan            |
 | [Download Service](docs/downloader.md)                   | Wrapper `background_downloader`: single & batch download, auto move ke shared storage, notifikasi sistem, lifecycle |
