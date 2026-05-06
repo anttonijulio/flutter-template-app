@@ -12,6 +12,7 @@ dependencies:
 
   # B
   bounce: ^1.0.2
+  background_downloader: ^9.5.4
 
   # C
   connectivity_plus: ^7.1.1

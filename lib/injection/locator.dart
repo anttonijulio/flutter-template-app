@@ -10,6 +10,7 @@ import 'package:template_app/core/services/caching/cache_manager.dart';
 import 'package:template_app/core/services/firebase/crashlytics_service.dart';
 import 'package:template_app/core/services/firebase/firebase_messaging_service.dart';
 import 'package:template_app/core/services/firebase/remote_config_service.dart';
+import 'package:template_app/core/services/downloader/download_service.dart';
 import 'package:template_app/core/services/files/file_picker_service.dart';
 import 'package:template_app/core/services/files/media_picker_service.dart';
 import 'package:template_app/core/services/location/location_service.dart';
@@ -141,6 +142,13 @@ Future<void> initLocator() async {
   ////! ======================
   locator.registerLazySingleton(() => MediaPickerService());
   locator.registerLazySingleton(() => FilePickerService());
+
+  ////! ======================
+  ////! DOWNLOADER
+  ////! ======================
+  final downloadService = DownloadService();
+  await downloadService.init();
+  locator.registerSingleton(downloadService);
 
   ////! ======================
   ////! FIREBASE REMOTE CONFIG

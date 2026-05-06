@@ -74,12 +74,13 @@ flutter build apk --release
 
 Detailed guides for the core services are in the [`docs/`](docs/) folder:
 
-| Document                                     | Description                                                               |
-| -------------------------------------------- | ------------------------------------------------------------------------- |
-| [Notification Service](docs/notification.md) | Local notifications + FCM push, dispatcher pattern, adding new handlers   |
-| [Socket Client](docs/socket.md)              | Socket.IO transport, lifecycle with auth, per-feature repository pattern  |
-| [Cache Manager](docs/cache.md)               | Two-layer memory/storage cache, TTL, SWR, force refresh, invalidation     |
-| [Remote Config](docs/remote_config.md)       | Firebase Remote Config, adding parameters, force update, maintenance mode |
-| [DioClient & AppApiClient](docs/dio_client.md) | HTTP client setup, multi base URL, interceptors, konsumsi di datasource  |
-| [Result<S, E>](docs/result.md)                 | Sealed return type untuk operasi data: membuat, mengambil value, transformasi, dan pola per layer |
-| [LocationServiceHelper](docs/location_service_helper.md) | Dialog GPS native via Play Services (Android) tanpa redirect ke Settings; setup, konflik native, batasan |
+| Document                                                 | Description                                                                                                         |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| [Notification Service](docs/notification.md)             | Local notifications + FCM push, dispatcher pattern, adding new handlers                                             |
+| [Socket Client](docs/socket.md)                          | Socket.IO transport, lifecycle with auth, per-feature repository pattern                                            |
+| [Cache Manager](docs/cache.md)                           | Two-layer memory/storage cache, TTL, SWR, force refresh, invalidation                                               |
+| [Remote Config](docs/remote_config.md)                   | Firebase Remote Config, adding parameters, force update, maintenance mode                                           |
+| [DioClient & AppApiClient](docs/dio_client.md)           | HTTP client setup, multi base URL, interceptors, konsumsi di datasource                                             |
+| [Result<S, E>](docs/result.md)                           | Sealed return type untuk operasi data: membuat, mengambil value, transformasi, dan pola per layer                   |
+| [LocationServiceHelper](docs/location_service_helper.md) | Dialog GPS native via Play Services (Android) tanpa redirect ke Settings; setup, konflik native, batasan            |
+| [Download Service](docs/downloader.md)                   | Wrapper `background_downloader`: single & batch download, auto move ke shared storage, notifikasi sistem, lifecycle |
