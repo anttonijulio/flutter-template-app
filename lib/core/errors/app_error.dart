@@ -1,10 +1,5 @@
-import 'dart:async';
-
 import 'package:equatable/equatable.dart';
 import 'package:template_app/core/constants/status_error_code.dart';
-import 'package:template_app/core/errors/exceptions/api_exception.dart';
-import 'package:template_app/core/errors/exceptions/network_exception.dart';
-import 'package:template_app/core/errors/exceptions/parsing_exception.dart';
 
 class AppError extends Equatable {
   final String message;
@@ -28,11 +23,11 @@ class AppError extends Equatable {
     );
   }
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toJson() {
     return <String, dynamic>{'message': message, 'title': title, 'code': code};
   }
 
-  factory AppError.fromMap(Map<String, dynamic> map) {
+  factory AppError.fromJson(Map<String, dynamic> map) {
     return AppError(
       message: map['message'] ?? "",
       title: map['title'],
@@ -41,25 +36,6 @@ class AppError extends Equatable {
   }
 
   factory AppError.fromException(Object e) {
-    if (e is ApiException) return e.error;
-    if (e is ParsingException) return e.error;
-    if (e is NetworkException) return e.error;
-    if (e is FormatException) {
-      return AppError(
-        title: 'Gagal Memuat Data',
-        message:
-            'Kami mengalami kendala saat memproses data. Silakan coba lagi dalam beberapa saat.',
-        code: DATA_PARSING_ERROR_CODE,
-      );
-    }
-    if (e is TimeoutException) {
-      return AppError(
-        title: 'Proses Terlalu Lama',
-        message:
-            'Operasi memakan waktu lebih lama dari yang diharapkan. Silakan coba lagi.',
-        code: PROCESS_TIMEOUT_ERROR_CODE,
-      );
-    }
     return AppError(
       title: "Terjadi Kesalahan",
       message:

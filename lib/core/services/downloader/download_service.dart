@@ -1,7 +1,9 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 import 'dart:io';
 
 import 'package:background_downloader/background_downloader.dart';
+import 'package:equatable/equatable.dart';
 
 import '../../errors/app_error.dart';
 import '../../utilities/logger.dart';
@@ -24,7 +26,7 @@ enum DownloadStatus {
 }
 
 /// Single download request used by the batch API.
-class DownloadFileRequest {
+class DownloadFileRequest extends Equatable {
   final String url;
   final String filename;
   final DownloadFileType type;
@@ -34,10 +36,25 @@ class DownloadFileRequest {
     required this.filename,
     required this.type,
   });
+
+  @override
+  List<Object> get props => [url, filename, type];
+
+  DownloadFileRequest copyWith({
+    String? url,
+    String? filename,
+    DownloadFileType? type,
+  }) {
+    return DownloadFileRequest(
+      url: url ?? this.url,
+      filename: filename ?? this.filename,
+      type: type ?? this.type,
+    );
+  }
 }
 
 /// Per-file outcome of a download (single or one entry of a batch).
-class DownloadResult {
+class DownloadResult extends Equatable {
   final String filename;
   final DownloadStatus status;
   final String? filePath;
@@ -49,10 +66,33 @@ class DownloadResult {
   });
 
   bool get isSuccess => status == DownloadStatus.complete;
+
+  @override
+  List<Object?> get props => [filename, status, filePath];
+
+  DownloadResult copyWith({
+    String? filename,
+    DownloadStatus? status,
+    String? filePath,
+  }) {
+    return DownloadResult(
+      filename: filename ?? this.filename,
+      status: status ?? this.status,
+      filePath: filePath ?? this.filePath,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'filename': filename,
+      'status': status.name,
+      'filePath': filePath,
+    };
+  }
 }
 
 /// Aggregated outcome of a batch download.
-class DownloadBatchResult {
+class DownloadBatchResult extends Equatable {
   final List<DownloadResult> succeeded;
   final List<DownloadResult> failed;
 
@@ -62,6 +102,26 @@ class DownloadBatchResult {
   int get numFailed => failed.length;
   int get total => numSucceeded + numFailed;
   bool get hasFailures => failed.isNotEmpty;
+
+  @override
+  List<Object> get props => [succeeded, failed];
+
+  DownloadBatchResult copyWith({
+    List<DownloadResult>? succeeded,
+    List<DownloadResult>? failed,
+  }) {
+    return DownloadBatchResult(
+      succeeded: succeeded ?? this.succeeded,
+      failed: failed ?? this.failed,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'succeeded': succeeded.map((x) => x.toJson()).toList(),
+      'failed': failed.map((x) => x.toJson()).toList(),
+    };
+  }
 }
 
 class DownloadService {
@@ -87,10 +147,10 @@ class DownloadService {
     Log.i('Disposed', label: _logLabel);
   }
 
-  Future<AppResult<DownloadResult>> downloadFile(
-    String url,
-    String filename,
-    DownloadFileType type, {
+  Future<AppResult<DownloadResult>> downloadFile({
+    required DownloadFileType type,
+    required String url,
+    required String filename,
     void Function(double progress)? onProgress,
     void Function(DownloadStatus status)? onStatus,
     bool showNotification = true,
@@ -143,8 +203,8 @@ class DownloadService {
     }
   }
 
-  Future<AppResult<DownloadBatchResult>> downloadBatch(
-    List<DownloadFileRequest> requests, {
+  Future<AppResult<DownloadBatchResult>> downloadBatch({
+    required List<DownloadFileRequest> requests,
     void Function(int succeeded, int failed)? onBatchProgress,
     bool showNotification = true,
   }) async {
