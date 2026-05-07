@@ -1,4 +1,3 @@
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:template_app/core/services/notification/notification_payload.dart';
 import 'package:template_app/core/utilities/logger.dart';
 
@@ -27,9 +26,10 @@ class NotificationDispatcher {
     Log.d('Registered handler: ${handler.type}', label: _logLabel);
   }
 
-  /// Pass this as [NotificationService.initialize] onTap — handles foreground taps.
-  void dispatch(NotificationResponse response) {
-    final raw = response.payload;
+  /// Parses [raw] and routes to the matching handler.
+  /// Pass [NotificationResponse.payload] from [NotificationService] — keeps
+  /// this class free of any plugin dependency.
+  void dispatch(String? raw) {
     if (raw == null || raw.isEmpty) return;
 
     try {
