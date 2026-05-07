@@ -1,8 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-/// SharedPreferences key used to hand off a background tap to the foreground.
-const kPendingNotificationKey = 'pending_notification_payload';
+import 'package:template_app/core/services/datasources/local_storage/storage_key.dart';
 
 /// Top-level function — required by flutter_local_notifications.
 ///
@@ -18,5 +16,5 @@ Future<void> onBackgroundNotificationResponse(
   final payload = response.payload;
   if (payload == null || payload.isEmpty) return;
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setString(kPendingNotificationKey, payload);
+  await prefs.setString(StorageKey.pendingLocalPayload, payload);
 }

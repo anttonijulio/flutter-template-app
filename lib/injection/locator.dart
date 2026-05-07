@@ -15,6 +15,7 @@ import 'package:template_app/core/services/files/file_picker_service.dart';
 import 'package:template_app/core/services/files/media_picker_service.dart';
 import 'package:template_app/core/services/location/location_service.dart';
 import 'package:template_app/core/services/location/location_service_helper.dart';
+import 'package:template_app/core/services/notification/impl/flutter_local_notification_service.dart';
 import 'package:template_app/core/services/notification/notification_dispatcher.dart';
 import 'package:template_app/core/services/notification/notification_service.dart';
 import 'package:template_app/core/services/region/region_service.dart';
@@ -121,14 +122,17 @@ Future<void> initLocator() async {
   // dispatcher.register(OrderNotificationHandler(locator()));
   // dispatcher.register(PromoNotificationHandler(locator()));
 
-  final notificationService = NotificationService();
+  // Swap implementation here to switch underlying plugin
+  // (e.g. AwesomeNotificationService()).
+  final NotificationService notificationService =
+      FlutterLocalNotificationService();
   await notificationService.initialize(onTap: dispatcher.dispatch);
 
   final fcmService = FirebaseMessagingService(notificationService, dispatcher);
   await fcmService.initialize();
 
   locator.registerSingleton(dispatcher);
-  locator.registerSingleton(notificationService);
+  locator.registerSingleton<NotificationService>(notificationService);
   locator.registerSingleton(fcmService);
 
   ////! ======================

@@ -4,10 +4,34 @@ Arsitektur notifikasi terdiri dari dua layer yang bekerja bersama:
 
 | Service | Package | Tanggung jawab |
 |---|---|---|
-| `NotificationService` | `flutter_local_notifications` | Tampilkan notifikasi di device |
+| `NotificationService` | _(interface — bebas plugin)_ | Kontrak tampilkan notifikasi di device |
 | `FirebaseMessagingService` | `firebase_messaging` | Terima push notification dari server |
 
 Keduanya terhubung melalui `NotificationDispatcher` sebagai single entry point untuk semua aksi tap.
+
+---
+
+## Pilih satu implementasi
+
+> **PERINGATAN:** Gunakan **salah satu** implementasi — `FlutterLocalNotificationService` atau `AwesomeNotificationService`. Keduanya tidak bisa dipakai bersamaan karena masing-masing mendaftarkan channel dan handler notifikasi sendiri, yang akan menyebabkan konflik channel ID, duplikasi notifikasi, dan perilaku tap yang tidak terduga.
+
+Tentukan pilihan di `locator.dart` dan jangan ubah lagi selama siklus hidup proyek:
+
+```dart
+// locator.dart — hanya satu yang aktif
+final NotificationService notificationService =
+    FlutterLocalNotificationService(); // ← pilihan aktif
+
+// final NotificationService notificationService =
+//     AwesomeNotificationService();   // ← nonaktif
+```
+
+| | `FlutterLocalNotificationService` | `AwesomeNotificationService` |
+|---|---|---|
+| Package | `flutter_local_notifications` | `awesome_notifications` |
+| Background handler | `notification_background.dart` | built-in di dalam service |
+| Native setup | Minimal | Perlu konfigurasi `AndroidManifest.xml` & `AppDelegate.swift` |
+| Fitur tambahan | Standar | Action button, progress bar, dll |
 
 ---
 
@@ -16,13 +40,17 @@ Keduanya terhubung melalui `NotificationDispatcher` sebagai single entry point u
 ```
 lib/core/services/
 ├── firebase/
-│   ├── firebase_background.dart        # top-level handler background isolate FCM
-│   └── firebase_messaging_service.dart # terima pesan FCM, token, topic
+│   ├── firebase_background.dart             # top-level handler background isolate FCM
+│   └── firebase_messaging_service.dart      # terima pesan FCM, token, topic
 ├── notification/
-│   ├── notification_background.dart    # top-level handler background isolate lokal
-│   ├── notification_dispatcher.dart    # registry + routing ke feature handler
-│   ├── notification_payload.dart       # model payload + NotificationType constants
-│   └── notification_service.dart       # tampilkan notifikasi lokal
+│   ├── notification_service.dart            # interface — bebas plugin
+│   ├── notification_channel.dart            # enum channel — bebas plugin
+│   ├── notification_dispatcher.dart         # registry + routing ke feature handler
+│   ├── notification_payload.dart            # model payload + NotificationType constants
+│   └── impl/
+│       ├── flutter_local_notification_service.dart     # implementasi flutter_local_notifications
+│       ├── flutter_local_notification_background.dart  # top-level handler background isolate lokal
+│       └── awesome_notification_service.dart           # implementasi awesome_notifications
 └── injection/
     └── locator.dart
 ```
@@ -155,7 +183,7 @@ Payload **wajib** berisi `NotificationPayload` agar dispatcher bisa meneruskan k
 ```dart
 final notif = locator<NotificationService>();
 
-// Notifikasi sederhana
+// Notifikasi di channel default (general)
 await notif.show(
   id: 1,
   title: 'Pesan baru',
@@ -166,15 +194,15 @@ await notif.show(
   ).encode(),
 );
 
-// Notifikasi dengan teks panjang (expanded di Android)
-await notif.showBigText(
+// Notifikasi di channel tertentu
+await notif.show(
   id: 2,
-  title: 'Update pesanan',
-  body: 'Pesanan #99 sedang dikirim',
-  bigText: 'Pesanan #99 sedang dalam perjalanan. Estimasi tiba pukul 15.00 WIB.',
+  title: 'Promo hari ini',
+  body: 'Diskon 50% untuk semua produk',
+  channel: NotificationChannel.promo,
   payload: NotificationPayload(
-    type: NotificationType.order,
-    data: {'order_id': '99'},
+    type: NotificationType.promo,
+    data: {'promo_id': '99'},
   ).encode(),
 );
 

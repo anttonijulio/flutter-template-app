@@ -1,6 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:template_app/core/services/datasources/local_storage/storage_key.dart';
 import 'package:template_app/core/services/firebase/firebase_background.dart';
 import 'package:template_app/core/services/notification/notification_dispatcher.dart';
 import 'package:template_app/core/services/notification/notification_payload.dart';
@@ -50,9 +51,9 @@ class FirebaseMessagingService {
 
     // Case: data-only background message saved by the background isolate.
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(kPendingFcmKey);
+    final raw = prefs.getString(StorageKey.pendingFcmPayload);
     if (raw != null && raw.isNotEmpty) {
-      await prefs.remove(kPendingFcmKey);
+      await prefs.remove(StorageKey.pendingFcmPayload);
       Log.i('Pending FCM data message: $raw', label: _logLabel);
       try {
         _dispatcher.dispatchPayload(NotificationPayload.fromString(raw));

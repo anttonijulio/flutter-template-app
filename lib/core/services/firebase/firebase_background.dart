@@ -1,10 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:template_app/core/services/datasources/local_storage/storage_key.dart';
 import 'package:template_app/core/services/notification/notification_payload.dart';
-
-/// SharedPreferences key for data-only FCM messages received in background isolate.
-const kPendingFcmKey = 'pending_fcm_payload';
 
 /// Top-level function — required by firebase_messaging for background handling.
 ///
@@ -31,5 +29,5 @@ Future<void> onFirebaseBackgroundMessage(RemoteMessage message) async {
   );
 
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setString(kPendingFcmKey, payload.encode());
+  await prefs.setString(StorageKey.pendingFcmPayload, payload.encode());
 }
