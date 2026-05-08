@@ -1,16 +1,16 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:template_app/core/services/location/location_service_helper.dart';
+import 'package:gms_location_settings_dialog/gms_location_settings_dialog.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const channel = MethodChannel('template_app/location_service');
+  const channel = MethodChannel('gms_location_settings_dialog/settings');
 
-  late LocationServiceHelper sut;
+  late GmsLocationSettingsDialog sut;
 
   setUp(() {
-    sut = LocationServiceHelper();
+    sut = GmsLocationSettingsDialog();
   });
 
   tearDown(() {
@@ -23,27 +23,27 @@ void main() {
         .setMockMethodCallHandler(channel, handler);
   }
 
-  group('requestService', () {
+  group('show', () {
     test('returns true when native side returns true', () async {
-      mockChannel((call) async => true);
+      mockChannel((_) async => true);
 
-      final result = await sut.requestService();
+      final result = await sut.show();
 
       expect(result, isTrue);
     });
 
     test('returns false when native side returns false', () async {
-      mockChannel((call) async => false);
+      mockChannel((_) async => false);
 
-      final result = await sut.requestService();
+      final result = await sut.show();
 
       expect(result, isFalse);
     });
 
     test('returns false when native side returns null', () async {
-      mockChannel((call) async => null);
+      mockChannel((_) async => null);
 
-      final result = await sut.requestService();
+      final result = await sut.show();
 
       expect(result, isFalse);
     });
@@ -55,20 +55,20 @@ void main() {
         return true;
       });
 
-      await sut.requestService();
+      await sut.show();
 
-      expect(capturedMethod, equals('requestService'));
+      expect(capturedMethod, equals('show'));
     });
 
     test('returns false on PlatformException', () async {
       mockChannel(
         (_) async => throw PlatformException(
           code: 'ALREADY_PENDING',
-          message: 'A request is already in progress',
+          message: 'A dialog is already showing',
         ),
       );
 
-      final result = await sut.requestService();
+      final result = await sut.show();
 
       expect(result, isFalse);
     });
@@ -76,7 +76,7 @@ void main() {
     test('returns false on MissingPluginException', () async {
       mockChannel((_) async => throw MissingPluginException());
 
-      final result = await sut.requestService();
+      final result = await sut.show();
 
       expect(result, isFalse);
     });

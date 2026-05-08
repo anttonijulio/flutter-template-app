@@ -53,6 +53,10 @@ dependencies:
   image_picker: ^1.2.2
 
   # L
+  gms_location_settings_dialog:
+    git:
+      url: https://github.com/anttonijulio/gms_location_settings_dialog
+      ref: v1.0.0
   logger: ^2.7.0
 
   # O
