@@ -18,13 +18,17 @@ class DioClient {
     String baseUrl,
     this._connectivity, {
     List<Interceptor> interceptors = const [],
+    Duration connectTimeout = const Duration(seconds: 90),
+    Duration receiveTimeout = const Duration(seconds: 90),
+    Duration sendTimeout = const Duration(minutes: 10),
+    Map<String, dynamic>? extraHeaders,
   }) : _dio = Dio(
          BaseOptions(
            baseUrl: baseUrl,
-           connectTimeout: const Duration(seconds: 90),
-           receiveTimeout: const Duration(seconds: 90),
-           sendTimeout: const Duration(minutes: 10),
-           headers: {'Accept': 'application/json'},
+           connectTimeout: connectTimeout,
+           receiveTimeout: receiveTimeout,
+           sendTimeout: sendTimeout,
+           headers: extraHeaders ?? {'Accept': 'application/json'},
          ),
        ) {
     _dio.interceptors.addAll([

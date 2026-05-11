@@ -15,52 +15,52 @@ class RegionService {
   RegionService(this._client, this._cache);
 
   Future<AppResult<RegionResponse>> getProvinces({
-    bool enableCache = true,
+    bool refresh = false,
     Duration cacheAge = _defaultCacheAge,
   }) {
     return _cached(
       'region:provinces',
       () => _fetch('/provinces.json'),
-      enableCache: enableCache,
+      refresh: refresh,
       cacheAge: cacheAge,
     );
   }
 
   Future<AppResult<RegionResponse>> getRegencies(
     String provinceCode, {
-    bool enableCache = true,
+    bool refresh = false,
     Duration cacheAge = _defaultCacheAge,
   }) {
     return _cached(
       'region:regencies:$provinceCode',
       () => _fetch('/regencies/$provinceCode.json'),
-      enableCache: enableCache,
+      refresh: refresh,
       cacheAge: cacheAge,
     );
   }
 
   Future<AppResult<RegionResponse>> getDistricts(
     String regencyCode, {
-    bool enableCache = true,
+    bool refresh = false,
     Duration cacheAge = _defaultCacheAge,
   }) {
     return _cached(
       'region:districts:$regencyCode',
       () => _fetch('/districts/$regencyCode.json'),
-      enableCache: enableCache,
+      refresh: refresh,
       cacheAge: cacheAge,
     );
   }
 
   Future<AppResult<RegionResponse>> getVillages(
     String districtCode, {
-    bool enableCache = true,
+    bool refresh = false,
     Duration cacheAge = _defaultCacheAge,
   }) {
     return _cached(
       'region:villages:$districtCode',
       () => _fetch('/villages/$districtCode.json'),
-      enableCache: enableCache,
+      refresh: refresh,
       cacheAge: cacheAge,
     );
   }
@@ -68,16 +68,16 @@ class RegionService {
   Future<AppResult<RegionResponse>> _cached(
     String key,
     Future<RegionResponse> Function() fetcher, {
-    required bool enableCache,
+    required bool refresh,
     required Duration cacheAge,
   }) async {
     try {
       final data = await _cache.get<RegionResponse>(
         key: key,
         fetcher: fetcher,
-        maxAge: enableCache ? cacheAge : null,
-        forceRefresh: !enableCache,
-        staleWhileRevalidate: enableCache,
+        maxAge: refresh ? null : cacheAge,
+        forceRefresh: refresh,
+        staleWhileRevalidate: !refresh,
         fromJson: (json) => RegionResponse.fromJson(json as Map<String, dynamic>),
         toJson: (data) => data.toJson(),
       );
