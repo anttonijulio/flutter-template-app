@@ -9,10 +9,10 @@ import 'package:template_app/core/utilities/logger.dart';
 import 'package:template_app/core/utilities/result.dart';
 
 class LocationService {
-  LocationService(this._cache, this._serviceHelper);
+  LocationService(this._cache, this._gmsLocationSettings);
 
   final CacheManager _cache;
-  final LocationServiceHelper _serviceHelper;
+  final GmsLocationSettingsDialog _gmsLocationSettings;
 
   static const String _logLabel = 'LocationService';
   static const String _cacheKey = 'location:current_location_data';
@@ -94,7 +94,7 @@ class LocationService {
   /// iOS: cek status tanpa dialog). Return true jika GPS aktif setelah dialog.
   Future<bool> requestService() {
     Log.d('Requesting location service via native dialog', label: _logLabel);
-    return _serviceHelper.requestService();
+    return _gmsLocationSettings.show();
   }
 
   /// Meminta izin lokasi dari user. Return failure jika ditolak atau

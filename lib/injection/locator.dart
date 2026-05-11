@@ -138,7 +138,7 @@ Future<void> initLocator() async {
   ////! ======================
   ////! LOCATION
   ////! ======================
-  locator.registerLazySingleton(() => LocationServiceHelper());
+  locator.registerLazySingleton(() => GmsLocationSettingsDialog());
   locator.registerLazySingleton(() => LocationService(locator(), locator()));
 
   ////! ======================
